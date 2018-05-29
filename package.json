@@ -1,0 +1,20 @@
+{
+  "name": "steem-uri",
+  "version": "0.1.0",
+  "description": "Steem URI parser and encoder",
+  "license": "MIT",
+  "main": "./lib/index",
+  "typings": "./lib/index",
+  "scripts": {
+    "prepublish": "make lib"
+  },
+  "files": [
+    "lib/*"
+  ],
+  "devDependencies": {
+    "@types/node": "^10.0.9",
+    "dsteem": "^0.8.7",
+    "tslint": "^5.10.0",
+    "typescript": "^2.8.3"
+  }
+}
