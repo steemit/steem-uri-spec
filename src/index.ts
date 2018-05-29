@@ -48,9 +48,9 @@ export interface UnresolvedTransaction extends Transaction {
 }
 
 /**
- * Parsing result.
+ * Decoding result.
  */
-export interface ParsingResult {
+export interface DecodeResult {
     /**
      * Decoded transaction. May have placeholders, use {@link resolve} to
      * resolve them into a signable transaction.
@@ -68,7 +68,7 @@ export interface ParsingResult {
  * @throws If the url can not be parsed.
  * @returns The resolved transaction and parameters.
  */
-export function parse(steemUrl: string): ParsingResult {
+export function decode(steemUrl: string): DecodeResult {
     const url = new URL(steemUrl)
     if (url.protocol !== 'steem:') {
         throw new Error(`Invalid protocol, expected 'steem:' got '${ url.protocol }'`)
@@ -134,16 +134,26 @@ export interface ResolveOptions {
     preferred_signer: string
 }
 
+/**
+ * Transaction resolving result.
+ */
+export interface ResolveResult {
+    /** The resolved transaction ready to be signed. */
+    tx: Transaction,
+    /** The account that should sign the transaction. */
+    signer: string,
+}
+
 const RESOLVE_PATTERN = /(__(ref_block_(num|prefix)|expiration|signer))/g
 
 /**
  * Resolves placeholders in a transaction.
- * @param tx Unresolved transaction data.
+ * @param utx Unresolved transaction data.
  * @param params Protocol parameters.
  * @param options Values to use when resolving.
- * @returns The resolved transaction.
+ * @returns The resolved transaction and signer.
  */
-export function resolveTransaction(tx: UnresolvedTransaction, params: Parameters, options: ResolveOptions) {
+export function resolveTransaction(utx: UnresolvedTransaction, params: Parameters, options: ResolveOptions): ResolveResult {
     const signer = params.signer || options.preferred_signer
     if (!options.signers.includes(signer)) {
         throw new Error(`Signer '${ signer }' not available`)
@@ -177,7 +187,8 @@ export function resolveTransaction(tx: UnresolvedTransaction, params: Parameters
                 return val
         }
     }
-    return walk(tx) as Transaction
+    let tx = walk(utx) as Transaction
+    return {signer, tx}
 }
 
 /**
