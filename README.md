@@ -211,7 +211,7 @@ Operation:
 Examples
 --------
 
-Example usage of the protocol along with data for every step that can be used in tests. Examples assumes a `__signer` of `foo` a `__expiration` of `1970-01-01T00:00:00` and `__ref_block_num`, `__ref_block_prefix` set to `0`.
+Example usage of the protocol along with data for every step that can be used in tests. Examples assumes a `__signer` of `foo` a `__expiration` of `1970-01-01T00:00:00` and `__ref_block_num`, `__ref_block_prefix` set to `0` unless otherwise stated.
 
 ### Send a limit order
 
@@ -273,3 +273,37 @@ Encoded:
 steem://sign/op/WyJhY2NvdW50X3dpdG5lc3Nfdm90ZSIseyJhY2NvdW50IjoiX19zaWduZXIiLCJ3aXRuZXNzIjoiamVzdGEiLCJhcHByb3ZlIjp0cnVlfV0.
 ```
 
+
+### Multisig
+
+To sign for an account setup with multiple authorities a central service can act as a transaction facilitator using the `nb` (no_broadcast) option.
+
+In the following scenario the account `foo` is setup with an active authority that has three account auths belonging to `bob`, `alice` and `picard`, the weights are setup so that two of those three accounts.
+
+`bob` wants to transfer `150.000 STEEM` from the `foo` account to himself so he submits an operation to the signing service:
+
+```json
+["transfer", {
+  "from": "foo",
+  "to": "bob",
+  "amount": "150.000 STEEM",
+  "memo": "Bob's boat needs plastic padding"
+}]
+```
+
+The service then generates a signing URI with that operation and the following options:
+
+```json
+{
+  "no_broadcast": true,
+  "callback": "https://sign.steem.vc/collect?id=123&sig={{sig}}"
+}
+```
+
+```
+steem://sign/op/WyJ0cmFuc2ZlciIseyJmcm9tIjoiZm9vIiwidG8iOiJib2IiLCJhbW91bnQiOiIxNTAuMDAwIFNURUVNIiwibWVtbyI6IkJvYidzIGJvYXQgbmVlZHMgcGxhc3RpYyBwYWRkaW5nIn1d?nb=&cb=aHR0cHM6Ly9zaWduLnN0ZWVtLnZjL2NvbGxlY3Q_aWQ9MTIzJnNpZz17e3NpZ319
+```
+
+`bob` then signs the transaction using the URI, the service callback is pinged and the service now has his signature. Then he sends the URI to `alice` and `picard` and when one of them signs it the service has enough signatures it broadcasts the transaction.
+
+The UX of a service like this can be excellent with the help of QR codes and collecting emails for signers so they can be notified when a signature is needed and when the transaction is broadcast.
