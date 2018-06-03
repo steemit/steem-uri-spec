@@ -101,7 +101,7 @@ Actions
 To facilitate re-usable signing URIs the implementation allows for a set of placeholder variables that can be used in a signing payload.
 
   * `__signer` - Replaced with the username of the signer
-  * `__expiration` - Replaced with current time plus some padding to allow the transaction to be broadcasted*
+  * `__expiration` - Replaced with current time plus some padding to allow the transaction to be broadcast*
   * `__ref_block_num` - Reference block number*
   * `__ref_block_prefix` - Reference block id*
 
@@ -169,7 +169,7 @@ To keep the length of the URIs short, and the QR code size manageable, some comm
 
 ### Transfer tokens
 
-Action: `steem://sign/follow/<username>/<amount>[/memo]`
+Action: `steem://sign/transfer/<username>/<amount>[/memo]`
 
 Params:
 
@@ -278,7 +278,7 @@ steem://sign/op/WyJhY2NvdW50X3dpdG5lc3Nfdm90ZSIseyJhY2NvdW50IjoiX19zaWduZXIiLCJ3
 
 To sign for an account setup with multiple authorities a central service can act as a transaction facilitator using the `nb` (no_broadcast) option.
 
-In the following scenario the account `foo` is setup with an active authority that has three account auths belonging to `bob`, `alice` and `picard`, the weights are setup so that two of those three accounts.
+In the following scenario the account `foo` is setup with an active authority that has three account auths belonging to `bob`, `alice` and `picard`, the weights are setup so that two of those three accounts needs to sign.
 
 `bob` wants to transfer `150.000 STEEM` from the `foo` account to himself so he submits an operation to the signing service:
 
