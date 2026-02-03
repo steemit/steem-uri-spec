@@ -20,6 +20,9 @@
   "engines": {
     "node": ">=20"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "pnpm run clean && tsc -p tsconfig.cjs.json && mv lib/index.js lib/index.cjs && tsc -p tsconfig.esm.json",
     "prepublish": "pnpm run build",
