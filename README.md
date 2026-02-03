@@ -6,27 +6,27 @@ Protocol facilitating signing of steem transactions. Meant to be implemented by 
 
 This repository contains both the specification and a zero dependency reference implementation that works in node.js and most browsers.
 
+**Requirements:** Node.js >= 20.
 
 Installation
 ------------
 
-Via npm or yarn:
+Via pnpm:
 
 ```
-npm install steem-uri
-yarn add steem-uri
+pnpm add @steemit/steem-uri
 ```
 
-Manually: clone the repository and run `make`, this will place the built lib in `lib/index.js`.
+Build from source: clone the repository, then `pnpm install` and `pnpm run build`. Output is in `lib/` (ESM: `lib/index.js`, CommonJS: `lib/index.cjs`, types: `lib/index.d.ts`).
 
 
 Example usage
 -------------
 
-Encoding operations:
+Encoding operations (CommonJS):
 
 ```js
-const steemuri = require('steem-uri')
+const steemuri = require('@steemit/steem-uri')
 
 steemuri.encodeOp(['vote', {voter: 'foo', author: 'bar', permlink: 'baz', weight: 10000}])
 // steem://sign/op/WyJ2b3RlIix7InZvdGVyIjoiZm9vIiwiYXV0aG9yIjoiYmFyIiwicGVybWxpbmsiOiJiYXoiLCJ3ZWlnaHQiOjEwMDAwfV0.
@@ -41,7 +41,7 @@ steemuri.encodeOps([
 Decoding and resolving steem:// links (for wallet implementers):
 
 ```js
-const steemuri = require('steem-uri')
+const steemuri = require('@steemit/steem-uri')
 
 // parse the steem:// link
 const parsed = steemuri.decode(link)

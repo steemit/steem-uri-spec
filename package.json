@@ -1,20 +1,37 @@
 {
-  "name": "steem-uri",
-  "version": "0.1.0",
+  "name": "@steemit/steem-uri",
+  "version": "0.2.0",
   "description": "Steem URI parser and encoder",
   "license": "MIT",
-  "main": "./lib/index",
-  "typings": "./lib/index",
-  "scripts": {
-    "prepublish": "make lib"
+  "main": "./lib/index.cjs",
+  "module": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "require": "./lib/index.cjs",
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
   },
   "files": [
     "lib/*"
   ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm run clean && tsc -p tsconfig.cjs.json && mv lib/index.js lib/index.cjs && tsc -p tsconfig.esm.json",
+    "prepublish": "pnpm run build",
+    "lint": "eslint src",
+    "clean": "rm -rf lib/"
+  },
   "devDependencies": {
-    "@types/node": "^10.0.9",
-    "dsteem": "^0.8.7",
-    "tslint": "^5.10.0",
-    "typescript": "^2.8.3"
+    "@eslint/js": "^9.39.1",
+    "@steemit/steem-js": "^1.0.12",
+    "@types/node": "^20",
+    "eslint": "^9.0.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.48.0"
   }
 }

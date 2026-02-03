@@ -1,29 +1,32 @@
 /**
  * Steem URI Signing Protocol
  * @author Johan Nordberg <johan@steemit.com>
+ * @refector by @ety001
  */
 
 // Only used for typings, no code is pulled in.
-import {Operation, Transaction} from 'dsteem'
+import type { Operation, Transaction } from '@steemit/steem-js'
 
 // Assumes node.js if any of the utils needed are missing.
 if (typeof URL === 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- polyfill for older envs
     global['URL'] = require('url').URL
 }
 if (typeof URLSearchParams === 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- polyfill for older envs
     global['URLSearchParams'] = require('url').URLSearchParams
 }
 if (typeof btoa === 'undefined') {
-    global['btoa'] = (str) => new Buffer(str, 'binary').toString('base64')
+    global['btoa'] = (str: string) => Buffer.from(str, 'latin1').toString('base64')
 }
 if (typeof atob === 'undefined') {
-    global['atob'] = (str) => new Buffer(str, 'base64').toString('binary')
+    global['atob'] = (str: string) => Buffer.from(str, 'base64').toString('latin1')
 }
 
 /// URL-safe Base64 encoding and decoding.
 const B64U_LOOKUP = {'/': '_', '_': '/', '+': '-', '-': '+', '=': '.', '.': '='}
-const b64uEnc = (str) => btoa(str).replace(/(\+|\/|=)/g, (m) => B64U_LOOKUP[m])
-const b64uDec = (str) => atob(str.replace(/(-|_|\.)/g, (m) => B64U_LOOKUP[m]))
+const b64uEnc = (str: string) => btoa(str).replace(/(\+|\/|=)/g, (m) => B64U_LOOKUP[m])
+const b64uDec = (str: string) => atob(str.replace(/(-|_|\.)/g, (m) => B64U_LOOKUP[m]))
 
 /**
  * Protocol parameters.
@@ -90,7 +93,7 @@ export function decode(steemUrl: string): DecodeResult {
             tx = payload
             break
         case 'op':
-        case 'ops':
+        case 'ops': {
             const operations: any[] = type === 'ops' ? payload : [payload]
             tx = {
                 ref_block_num: '__ref_block_num',
@@ -100,6 +103,7 @@ export function decode(steemUrl: string): DecodeResult {
                 operations,
             }
             break
+        }
         // case 'transfer':
         // case 'follow':
         default:
@@ -187,7 +191,7 @@ export function resolveTransaction(utx: UnresolvedTransaction, params: Parameter
                 return val
         }
     }
-    let tx = walk(utx) as Transaction
+    const tx = walk(utx) as Transaction
     return {signer, tx}
 }
 
