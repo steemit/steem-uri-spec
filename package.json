@@ -27,7 +27,8 @@
     "build": "pnpm run clean && tsc -p tsconfig.cjs.json && mv lib/index.js lib/index.cjs && tsc -p tsconfig.esm.json",
     "prepublish": "pnpm run build",
     "lint": "eslint src",
-    "clean": "rm -rf lib/"
+    "clean": "rm -rf lib/",
+    "test:e2e": "node test/e2e.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
