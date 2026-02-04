@@ -1,29 +1,32 @@
 /**
  * Steem URI Signing Protocol
  * @author Johan Nordberg <johan@steemit.com>
+ * @refector by @ety001
  */
 
 // Only used for typings, no code is pulled in.
-import {Operation, Transaction} from 'dsteem'
+import type { Operation, Transaction } from '@steemit/steem-js'
 
 // Assumes node.js if any of the utils needed are missing.
 if (typeof URL === 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- polyfill for older envs
     global['URL'] = require('url').URL
 }
 if (typeof URLSearchParams === 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- polyfill for older envs
     global['URLSearchParams'] = require('url').URLSearchParams
 }
 if (typeof btoa === 'undefined') {
-    global['btoa'] = (str) => new Buffer(str, 'binary').toString('base64')
+    global['btoa'] = (str: string) => Buffer.from(str, 'latin1').toString('base64')
 }
 if (typeof atob === 'undefined') {
-    global['atob'] = (str) => new Buffer(str, 'base64').toString('binary')
+    global['atob'] = (str: string) => Buffer.from(str, 'base64').toString('latin1')
 }
 
 /// URL-safe Base64 encoding and decoding.
 const B64U_LOOKUP = {'/': '_', '_': '/', '+': '-', '-': '+', '=': '.', '.': '='}
-const b64uEnc = (str) => btoa(str).replace(/(\+|\/|=)/g, (m) => B64U_LOOKUP[m])
-const b64uDec = (str) => atob(str.replace(/(-|_|\.)/g, (m) => B64U_LOOKUP[m]))
+const b64uEnc = (str: string) => btoa(str).replace(/(\+|\/|=)/g, (m) => B64U_LOOKUP[m])
+const b64uDec = (str: string) => atob(str.replace(/(-|_|\.)/g, (m) => B64U_LOOKUP[m]))
 
 /**
  * Protocol parameters.
@@ -62,16 +65,19 @@ export interface DecodeResult {
     params: Parameters
 }
 
+const VALID_PROTOCOLS = ['steem:', 'web+steem:', 'ext+steem:']
+
 /**
- * Parse a steem:// protocol link.
- * @param steemUrl The `steem:` url to parse.
+ * Parse a steem:, web+steem:, or ext+steem: protocol link.
+ * Accepts all three for backward compatibility and browser extension usage; new links should use web+steem:.
+ * @param steemUrl The `steem:`, `web+steem:`, or `ext+steem:` url to parse.
  * @throws If the url can not be parsed.
  * @returns The resolved transaction and parameters.
  */
 export function decode(steemUrl: string): DecodeResult {
     const url = new URL(steemUrl)
-    if (url.protocol !== 'steem:') {
-        throw new Error(`Invalid protocol, expected 'steem:' got '${ url.protocol }'`)
+    if (!VALID_PROTOCOLS.includes(url.protocol)) {
+        throw new Error(`Invalid protocol, expected one of ${ VALID_PROTOCOLS.join(', ') } got '${ url.protocol }'`)
     }
     if (url.host !== 'sign') {
         throw new Error(`Invalid action, expected 'sign' got '${ url.host }'`)
@@ -90,7 +96,7 @@ export function decode(steemUrl: string): DecodeResult {
             tx = payload
             break
         case 'op':
-        case 'ops':
+        case 'ops': {
             const operations: any[] = type === 'ops' ? payload : [payload]
             tx = {
                 ref_block_num: '__ref_block_num',
@@ -100,6 +106,7 @@ export function decode(steemUrl: string): DecodeResult {
                 operations,
             }
             break
+        }
         // case 'transfer':
         // case 'follow':
         default:
@@ -187,7 +194,7 @@ export function resolveTransaction(utx: UnresolvedTransaction, params: Parameter
                 return val
         }
     }
-    let tx = walk(utx) as Transaction
+    const tx = walk(utx) as Transaction
     return {signer, tx}
 }
 
@@ -241,17 +248,22 @@ function encodeJson(data: any) {
     return b64uEnc(JSON.stringify(data, null, 0))
 }
 
-/** Encodes a Steem transaction to a steem: URI. */
-export function encodeTx(tx: Transaction, params: Parameters = {}) {
-    return `steem://sign/tx/${ encodeJson(tx) }${ encodeParameters(params) }`
+/** Protocol scheme for encode output. */
+export type EncodeProtocol = 'steem' | 'web+steem' | 'ext+steem'
+
+const DEFAULT_ENCODE_PROTOCOL: EncodeProtocol = 'web+steem'
+
+/** Encodes a Steem transaction to a steem URI. */
+export function encodeTx(tx: Transaction, params: Parameters = {}, protocol: EncodeProtocol = DEFAULT_ENCODE_PROTOCOL) {
+    return `${ protocol }://sign/tx/${ encodeJson(tx) }${ encodeParameters(params) }`
 }
 
-/** Encodes a Steem operation to a steem: URI. */
-export function encodeOp(op: Operation, params: Parameters = {}) {
-    return `steem://sign/op/${ encodeJson(op) }${ encodeParameters(params) }`
+/** Encodes a Steem operation to a steem URI. */
+export function encodeOp(op: Operation, params: Parameters = {}, protocol: EncodeProtocol = DEFAULT_ENCODE_PROTOCOL) {
+    return `${ protocol }://sign/op/${ encodeJson(op) }${ encodeParameters(params) }`
 }
 
-/** Encodes several Steem operations to a steem: URI. */
-export function encodeOps(ops: Operation, params: Parameters = {}) {
-    return `steem://sign/ops/${ encodeJson(ops) }${ encodeParameters(params) }`
+/** Encodes several Steem operations to a steem URI. */
+export function encodeOps(ops: Operation, params: Parameters = {}, protocol: EncodeProtocol = DEFAULT_ENCODE_PROTOCOL) {
+    return `${ protocol }://sign/ops/${ encodeJson(ops) }${ encodeParameters(params) }`
 }

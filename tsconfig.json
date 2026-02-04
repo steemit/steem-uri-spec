@@ -6,10 +6,9 @@
     "moduleResolution": "node",
     "noImplicitThis": true,
     "outDir": "lib",
+    "rootDir": "src",
     "strictNullChecks": true,
-    "target": "es5"
+    "target": "ES2020"
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }
