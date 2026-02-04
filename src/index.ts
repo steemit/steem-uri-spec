@@ -65,16 +65,19 @@ export interface DecodeResult {
     params: Parameters
 }
 
+const VALID_PROTOCOLS = ['steem:', 'web+steem:', 'ext+steem:']
+
 /**
- * Parse a steem:// protocol link.
- * @param steemUrl The `steem:` url to parse.
+ * Parse a steem:, web+steem:, or ext+steem: protocol link.
+ * Accepts all three for backward compatibility and browser extension usage; new links should use web+steem:.
+ * @param steemUrl The `steem:`, `web+steem:`, or `ext+steem:` url to parse.
  * @throws If the url can not be parsed.
  * @returns The resolved transaction and parameters.
  */
 export function decode(steemUrl: string): DecodeResult {
     const url = new URL(steemUrl)
-    if (url.protocol !== 'steem:') {
-        throw new Error(`Invalid protocol, expected 'steem:' got '${ url.protocol }'`)
+    if (!VALID_PROTOCOLS.includes(url.protocol)) {
+        throw new Error(`Invalid protocol, expected one of ${ VALID_PROTOCOLS.join(', ') } got '${ url.protocol }'`)
     }
     if (url.host !== 'sign') {
         throw new Error(`Invalid action, expected 'sign' got '${ url.host }'`)
@@ -245,17 +248,22 @@ function encodeJson(data: any) {
     return b64uEnc(JSON.stringify(data, null, 0))
 }
 
-/** Encodes a Steem transaction to a steem: URI. */
-export function encodeTx(tx: Transaction, params: Parameters = {}) {
-    return `steem://sign/tx/${ encodeJson(tx) }${ encodeParameters(params) }`
+/** Protocol scheme for encode output. */
+export type EncodeProtocol = 'steem' | 'web+steem' | 'ext+steem'
+
+const DEFAULT_ENCODE_PROTOCOL: EncodeProtocol = 'web+steem'
+
+/** Encodes a Steem transaction to a steem URI. */
+export function encodeTx(tx: Transaction, params: Parameters = {}, protocol: EncodeProtocol = DEFAULT_ENCODE_PROTOCOL) {
+    return `${ protocol }://sign/tx/${ encodeJson(tx) }${ encodeParameters(params) }`
 }
 
-/** Encodes a Steem operation to a steem: URI. */
-export function encodeOp(op: Operation, params: Parameters = {}) {
-    return `steem://sign/op/${ encodeJson(op) }${ encodeParameters(params) }`
+/** Encodes a Steem operation to a steem URI. */
+export function encodeOp(op: Operation, params: Parameters = {}, protocol: EncodeProtocol = DEFAULT_ENCODE_PROTOCOL) {
+    return `${ protocol }://sign/op/${ encodeJson(op) }${ encodeParameters(params) }`
 }
 
-/** Encodes several Steem operations to a steem: URI. */
-export function encodeOps(ops: Operation, params: Parameters = {}) {
-    return `steem://sign/ops/${ encodeJson(ops) }${ encodeParameters(params) }`
+/** Encodes several Steem operations to a steem URI. */
+export function encodeOps(ops: Operation, params: Parameters = {}, protocol: EncodeProtocol = DEFAULT_ENCODE_PROTOCOL) {
+    return `${ protocol }://sign/ops/${ encodeJson(ops) }${ encodeParameters(params) }`
 }

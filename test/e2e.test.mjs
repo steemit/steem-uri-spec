@@ -27,19 +27,31 @@ const resolveOptions = {
 
 /** Run all e2e assertions against a loaded steem-uri module (no nested test()). */
 function runSuite(steemuri) {
-  // encodeOp -> decode round-trip
+  // encodeOp -> decode round-trip (default protocol web+steem)
   const uri = steemuri.encodeOp(voteOp);
-  assert.ok(uri.startsWith('steem://sign/op/'), 'encodeOp: URI starts with steem://sign/op/');
+  assert.ok(uri.startsWith('web+steem://sign/op/'), 'encodeOp: default URI starts with web+steem://sign/op/');
   let { tx, params } = steemuri.decode(uri);
   assert.ok(tx.operations, 'decode: tx has operations');
   assert.strictEqual(tx.operations.length, 1);
   assert.deepStrictEqual(tx.operations[0], voteOp);
   assert.strictEqual(Object.keys(params).length, 0);
 
+  // encodeOp with protocol steem
+  const uriSteem = steemuri.encodeOp(voteOp, {}, 'steem');
+  assert.ok(uriSteem.startsWith('steem://sign/op/'), 'encodeOp(steem): URI starts with steem://sign/op/');
+  const { tx: txSteem } = steemuri.decode(uriSteem);
+  assert.deepStrictEqual(txSteem.operations[0], voteOp);
+
+  // encodeOp with protocol ext+steem
+  const uriExt = steemuri.encodeOp(voteOp, {}, 'ext+steem');
+  assert.ok(uriExt.startsWith('ext+steem://sign/op/'), 'encodeOp(ext+steem): URI starts with ext+steem://sign/op/');
+  const { tx: txExt } = steemuri.decode(uriExt);
+  assert.deepStrictEqual(txExt.operations[0], voteOp);
+
   // encodeOps -> decode with params
   const paramsWithCb = { callback: 'https://example.com/wallet?tx={{id}}', signer: 'foo' };
   const uriOps = steemuri.encodeOps([voteOp, transferOp], paramsWithCb);
-  assert.ok(uriOps.startsWith('steem://sign/ops/'), 'encodeOps: URI starts with steem://sign/ops/');
+  assert.ok(uriOps.startsWith('web+steem://sign/ops/'), 'encodeOps: URI starts with web+steem://sign/ops/');
   assert.ok(uriOps.includes('?'), 'encodeOps: URI has query string');
   const { tx: txOps, params: decodedParams } = steemuri.decode(uriOps);
   assert.strictEqual(txOps.operations.length, 2);
@@ -55,7 +67,7 @@ function runSuite(steemuri) {
     operations: [voteOp],
   };
   const uriTx = steemuri.encodeTx(fullTx);
-  assert.ok(uriTx.startsWith('steem://sign/tx/'), 'encodeTx: URI starts with steem://sign/tx/');
+  assert.ok(uriTx.startsWith('web+steem://sign/tx/'), 'encodeTx: URI starts with web+steem://sign/tx/');
   const { tx: decodedTx } = steemuri.decode(uriTx);
   assert.strictEqual(decodedTx.ref_block_num, 1);
   assert.strictEqual(decodedTx.ref_block_prefix, 2);
@@ -86,11 +98,23 @@ function runSuite(steemuri) {
   const resolved = steemuri.resolveCallback(url, ctx);
   assert.strictEqual(resolved, 'https://example.com/cb?sig=abc&id=def&block=100&txn=2');
 
+  // decode accepts legacy steem:// (backward compatibility)
+  const legacyUri = steemuri.encodeOp(voteOp, {}, 'steem');
+  const { tx: legacyTx } = steemuri.decode(legacyUri);
+  assert.strictEqual(legacyTx.operations.length, 1);
+  assert.deepStrictEqual(legacyTx.operations[0], voteOp);
+
+  // decode accepts ext+steem:// (browser extension usage)
+  const extUri = steemuri.encodeOp(voteOp, {}, 'ext+steem');
+  const { tx: extTx } = steemuri.decode(extUri);
+  assert.strictEqual(extTx.operations.length, 1);
+  assert.deepStrictEqual(extTx.operations[0], voteOp);
+
   // decode rejects invalid protocol
   assert.throws(() => steemuri.decode('https://sign/op/x'), /Invalid protocol/);
 
   // decode rejects invalid action
-  assert.throws(() => steemuri.decode('steem://other/op/x'), /Invalid action/);
+  assert.throws(() => steemuri.decode('web+steem://other/op/x'), /Invalid action/);
 }
 
 test('E2E: CommonJS entry (lib/index.cjs)', () => {

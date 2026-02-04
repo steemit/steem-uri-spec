@@ -29,21 +29,21 @@ Encoding operations (CommonJS):
 const steemuri = require('@steemit/steem-uri')
 
 steemuri.encodeOp(['vote', {voter: 'foo', author: 'bar', permlink: 'baz', weight: 10000}])
-// steem://sign/op/WyJ2b3RlIix7InZvdGVyIjoiZm9vIiwiYXV0aG9yIjoiYmFyIiwicGVybWxpbmsiOiJiYXoiLCJ3ZWlnaHQiOjEwMDAwfV0.
+// web+steem://sign/op/WyJ2b3RlIix7InZvdGVyIjoiZm9vIiwiYXV0aG9yIjoiYmFyIiwicGVybWxpbmsiOiJiYXoiLCJ3ZWlnaHQiOjEwMDAwfV0.
 
 steemuri.encodeOps([
     ['vote', {voter: 'foo', author: 'bar', permlink: 'baz', weight: 10000}],
     ['transfer', {from: 'foo', to: 'bar', amount: '10.000 STEEM', memo: 'baz'}]
 ], {callback: 'https://example.com/wallet?tx={{id}}'})
-// steem://sign/ops/W1sidm90ZSIseyJ2b3RlciI6ImZvbyIsImF1dGhvciI6ImJhciIsInBlcm1saW5rIjoiYmF6Iiwid2VpZ2h0IjoxMDAwMH1dLFsidHJhbnNmZXIiLHsiZnJvbSI6ImZvbyIsInRvIjoiYmFyIiwiYW1vdW50IjoiMTAuMDAwIFNURUVNIiwibWVtbyI6ImJheiJ9XV0.?cb=aHR0cHM6Ly9leGFtcGxlLmNvbS93YWxsZXQ_dHg9e3tpZH19
+// web+steem://sign/ops/W1sidm90ZSIseyJ2b3RlciI6ImZvbyIsImF1dGhvciI6ImJhciIsInBlcm1saW5rIjoiYmF6Iiwid2VpZ2h0IjoxMDAwMH1dLFsidHJhbnNmZXIiLHsiZnJvbSI6ImZvbyIsInRvIjoiYmFyIiwiYW1vdW50IjoiMTAuMDAwIFNURUVNIiwibWVtbyI6ImJheiJ9XV0.?cb=aHR0cHM6Ly9leGFtcGxlLmNvbS93YWxsZXQ_dHg9e3tpZH19
 ```
 
-Decoding and resolving steem:// links (for wallet implementers):
+Decoding and resolving web+steem: links (for wallet implementers):
 
 ```js
 const steemuri = require('@steemit/steem-uri')
 
-// parse the steem:// link
+// parse the web+steem: link
 const parsed = steemuri.decode(link)
 
 // resolve the decoded tx and params to a signable tx
@@ -85,17 +85,19 @@ Specification
 
 A protocol that allows Steem transactions and operations to be encoded into links that can be shared across applications and devices to sign transactions without implementers having to reveal their private key.
 
+**Protocol scheme:** New links use `web+steem:` (recommended for web). `decode()` accepts `steem:`, `web+steem:`, and `ext+steem:`. `encodeTx()`, `encodeOp()`, and `encodeOps()` accept an optional third argument `protocol`: `'steem'`, `'web+steem'` (default), or `'ext+steem'`.
+
 
 Actions
 -------
 
-  * `steem://sign/tx/<base64u(JSON-encoded tx)>`
+  * `web+steem://sign/tx/<base64u(JSON-encoded tx)>`
     Sign an arbitrary transaction.
-  * `steem://sign/op/<base64u(JSON-encoded op)>`
+  * `web+steem://sign/op/<base64u(JSON-encoded op)>`
     As above but constructs a transaction around the operation before signing.
-  * `steem://sign/ops/<base64u(JSON-encoded op array)>`
+  * `web+steem://sign/ops/<base64u(JSON-encoded op array)>`
     As above but allows multiple operations as an array.
-  * `steem://sign/<operation_name>[/operation_params..]`
+  * `web+steem://sign/<operation_name>[/operation_params..]`
     Action aliases, see the "Specialized actions" section for more info.
 
 To facilitate re-usable signing URIs the implementation allows for a set of placeholder variables that can be used in a signing payload.
@@ -169,7 +171,7 @@ To keep the length of the URIs short, and the QR code size manageable, some comm
 
 ### Transfer tokens
 
-Action: `steem://sign/transfer/<username>/<amount>[/memo]`
+Action: `web+steem://sign/transfer/<username>/<amount>[/memo]`
 
 Params:
 
@@ -190,7 +192,7 @@ Operation:
 
 ### Follow user
 
-Action: `steem://sign/follow/<username>`
+Action: `web+steem://sign/follow/<username>`
 
 Params:
 
@@ -250,7 +252,7 @@ Parameters:
 Encoded:
 
 ```
-steem://sign/tx/eyJyZWZfYmxvY2tfbnVtIjo0ODg3MiwicmVmX2Jsb2NrX3ByZWZpeCI6MTU0Mzg1ODUxOSwiZXhwaXJhdGlvbiI6IjIwMTgtMDUtMjlUMTM6MTc6MzkiLCJleHRlbnNpb25zIjpbXSwib3BlcmF0aW9ucyI6W1sibGltaXRfb3JkZXJfY3JlYXRlMiIseyJvd25lciI6ImZvbyIsIm9yZGVyaWQiOjEsImFtb3VudF90b19zZWxsIjoiMTAuMDAwIFNURUVNIiwiZmlsbF9vcl9raWxsIjpmYWxzZSwiZXhjaGFuZ2VfcmF0ZSI6eyJiYXNlIjoiMS4wMDAgU1RFRU0iLCJxdW90ZSI6IjAuNDIwIFNCRCJ9LCJleHBpcmF0aW9uIjoiMjAxOC0wNS0zMFQwMDowMDowMCJ9XV19?s=foo&cb=aHR0cHM6Ly9zdGVlbS50cmFkZXIvc2lnbl9jYWxsYmFjaz9pZD17e2lkfX0.
+web+steem://sign/tx/eyJyZWZfYmxvY2tfbnVtIjo0ODg3MiwicmVmX2Jsb2NrX3ByZWZpeCI6MTU0Mzg1ODUxOSwiZXhwaXJhdGlvbiI6IjIwMTgtMDUtMjlUMTM6MTc6MzkiLCJleHRlbnNpb25zIjpbXSwib3BlcmF0aW9ucyI6W1sibGltaXRfb3JkZXJfY3JlYXRlMiIseyJvd25lciI6ImZvbyIsIm9yZGVyaWQiOjEsImFtb3VudF90b19zZWxsIjoiMTAuMDAwIFNURUVNIiwiZmlsbF9vcl9raWxsIjpmYWxzZSwiZXhjaGFuZ2VfcmF0ZSI6eyJiYXNlIjoiMS4wMDAgU1RFRU0iLCJxdW90ZSI6IjAuNDIwIFNCRCJ9LCJleHBpcmF0aW9uIjoiMjAxOC0wNS0zMFQwMDowMDowMCJ9XV19?s=foo&cb=aHR0cHM6Ly9zdGVlbS50cmFkZXIvc2lnbl9jYWxsYmFjaz9pZD17e2lkfX0.
 ```
 
 ### Witness vote
@@ -270,7 +272,7 @@ Operation:
 Encoded:
 
 ```
-steem://sign/op/WyJhY2NvdW50X3dpdG5lc3Nfdm90ZSIseyJhY2NvdW50IjoiX19zaWduZXIiLCJ3aXRuZXNzIjoiamVzdGEiLCJhcHByb3ZlIjp0cnVlfV0.
+web+steem://sign/op/WyJhY2NvdW50X3dpdG5lc3Nfdm90ZSIseyJhY2NvdW50IjoiX19zaWduZXIiLCJ3aXRuZXNzIjoiamVzdGEiLCJhcHByb3ZlIjp0cnVlfV0.
 ```
 
 
@@ -301,7 +303,7 @@ The service then generates a signing URI with that operation and the following o
 ```
 
 ```
-steem://sign/op/WyJ0cmFuc2ZlciIseyJmcm9tIjoiZm9vIiwidG8iOiJib2IiLCJhbW91bnQiOiIxNTAuMDAwIFNURUVNIiwibWVtbyI6IkJvYidzIGJvYXQgbmVlZHMgcGxhc3RpYyBwYWRkaW5nIn1d?nb=&cb=aHR0cHM6Ly9zaWduLnN0ZWVtLnZjL2NvbGxlY3Q_aWQ9MTIzJnNpZz17e3NpZ319
+web+steem://sign/op/WyJ0cmFuc2ZlciIseyJmcm9tIjoiZm9vIiwidG8iOiJib2IiLCJhbW91bnQiOiIxNTAuMDAwIFNURUVNIiwibWVtbyI6IkJvYidzIGJvYXQgbmVlZHMgcGxhc3RpYyBwYWRkaW5nIn1d?nb=&cb=aHR0cHM6Ly9zaWduLnN0ZWVtLnZjL2NvbGxlY3Q_aWQ9MTIzJnNpZz17e3NpZ319
 ```
 
 `bob` then signs the transaction using the URI, the service callback is pinged and the service now has his signature. Then he sends the URI to `alice` and `picard` and when one of them signs it the service has enough signatures it broadcasts the transaction.
