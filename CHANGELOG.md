@@ -12,6 +12,9 @@
   mojibake. URLs produced by encoders that base64'd raw UTF-8 bytes decode
   correctly; pure-ASCII payloads are byte-identical and unchanged.
 - fix: `encodeOps` parameter type corrected from `Operation` to `Operation[]`.
+- fix: rename the publish hook `prepublish` → `prepublishOnly`; pnpm does not
+  run `prepublish` on `pnpm publish`, so the build step was silently skipped
+  (matches the `@steemit/steem-js` release setup).
 - docs: README Base64u section now specifies UTF-8 serialization/parsing; the
   previous `btoa`/`atob`-only snippet documented the buggy latin1 behavior.
 
