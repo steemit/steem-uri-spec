@@ -23,10 +23,35 @@ if (typeof atob === 'undefined') {
     global['atob'] = (str: string) => Buffer.from(str, 'base64').toString('latin1')
 }
 
+/// TextEncoder/TextDecoder polyfill — Node-side only (same pattern as the
+/// btoa/atob polyfills above): for Node test/CLI usage on old runtimes.
+/// Browsers have implemented both since 2017; no browser polyfill is needed.
+if (typeof TextEncoder === 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- polyfill for older envs
+    global['TextEncoder'] = require('util').TextEncoder
+}
+if (typeof TextDecoder === 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- polyfill for older envs
+    global['TextDecoder'] = require('util').TextDecoder
+}
+
 /// URL-safe Base64 encoding and decoding.
 const B64U_LOOKUP = {'/': '_', '_': '/', '+': '-', '-': '+', '=': '.', '.': '='}
-const b64uEnc = (str: string) => btoa(str).replace(/(\+|\/|=)/g, (m) => B64U_LOOKUP[m])
-const b64uDec = (str: string) => atob(str.replace(/(-|_|\.)/g, (m) => B64U_LOOKUP[m]))
+// UTF-8 aware: btoa/atob operate on latin1 binary strings, which corrupts any
+// non-ASCII payload (e.g. CJK titles/bodies in comment ops). Encode the UTF-8
+// bytes of the string, and decode bytes back as UTF-8, instead.
+const b64uEnc = (str: string) => {
+    const bytes = new TextEncoder().encode(str)
+    let binary = ''
+    for (const byte of bytes) binary += String.fromCharCode(byte)
+    return btoa(binary).replace(/(\+|\/|=)/g, (m) => B64U_LOOKUP[m])
+}
+const b64uDec = (str: string) => {
+    const binary = atob(str.replace(/(-|_|\.)/g, (m) => B64U_LOOKUP[m]))
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+    return new TextDecoder('utf-8', {fatal: true}).decode(bytes)
+}
 
 /**
  * Protocol parameters.
@@ -264,6 +289,6 @@ export function encodeOp(op: Operation, params: Parameters = {}, protocol: Encod
 }
 
 /** Encodes several Steem operations to a steem URI. */
-export function encodeOps(ops: Operation, params: Parameters = {}, protocol: EncodeProtocol = DEFAULT_ENCODE_PROTOCOL) {
+export function encodeOps(ops: Operation[], params: Parameters = {}, protocol: EncodeProtocol = DEFAULT_ENCODE_PROTOCOL) {
     return `${ protocol }://sign/ops/${ encodeJson(ops) }${ encodeParameters(params) }`
 }
