@@ -23,7 +23,9 @@ if (typeof atob === 'undefined') {
     global['atob'] = (str: string) => Buffer.from(str, 'base64').toString('latin1')
 }
 
-/// TextEncoder/TextDecoder polyfill for older environments.
+/// TextEncoder/TextDecoder polyfill — Node-side only (same pattern as the
+/// btoa/atob polyfills above): for Node test/CLI usage on old runtimes.
+/// Browsers have implemented both since 2017; no browser polyfill is needed.
 if (typeof TextEncoder === 'undefined') {
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- polyfill for older envs
     global['TextEncoder'] = require('util').TextEncoder
@@ -287,6 +289,6 @@ export function encodeOp(op: Operation, params: Parameters = {}, protocol: Encod
 }
 
 /** Encodes several Steem operations to a steem URI. */
-export function encodeOps(ops: Operation, params: Parameters = {}, protocol: EncodeProtocol = DEFAULT_ENCODE_PROTOCOL) {
+export function encodeOps(ops: Operation[], params: Parameters = {}, protocol: EncodeProtocol = DEFAULT_ENCODE_PROTOCOL) {
     return `${ protocol }://sign/ops/${ encodeJson(ops) }${ encodeParameters(params) }`
 }

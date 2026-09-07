@@ -52,10 +52,20 @@ import { encodeOp, encodeOps, encodeTx, decode } from '../lib/index.js'
   console.log('PASS: old-encoder URL (UTF-8 bytes) decodes correctly with new decoder')
 }
 
+// --- callback (cb) parameter with CJK round-trip ------------------------------
+{
+  const op = ['vote', { voter: 'ety001', author: 'bob', permlink: 'p', weight: 10000 }]
+  const cb = 'https://example.com/回调?msg=完成✓'
+  const uri = encodeOp(op, { callback: cb })
+  const { tx, params } = decode(uri)
+  assert.strictEqual(params.callback, cb, 'cb param with CJK must round-trip')
+  console.log('PASS: callback param with CJK round-trip')
+}
+
 // --- invalid UTF-8 bytes should throw a clear error --------------------------
 {
   const b64u = Buffer.from([0xff, 0xfe, 0x00]).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-  assert.throws(() => decode(`steem://sign/op/${b64u}`), /Invalid payload|encoding/i)
+  assert.throws(() => decode(`steem://sign/op/${b64u}`), /Invalid payload/i)
   console.log('PASS: invalid UTF-8 payload rejected with clear error')
 }
 
