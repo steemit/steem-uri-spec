@@ -148,6 +148,8 @@ Base64u
 
 An URL-safe version base64 where `+` is replaced by `-`, `/` by `_` and the `=` padding by `.`.
 
+The payload (JSON-encoded tx/op, or the callback url) MUST be serialized to UTF-8 bytes before base64u encoding, and decoders MUST interpret the decoded bytes as UTF-8. Implementations should reject payloads that are not valid UTF-8 rather than silently producing garbled text. Note that `btoa`/`atob` alone operate on latin1 binary strings and corrupt any non-ASCII payload; earlier revisions of this document showed such an implementation, which was a bug.
+
 ```
 base64
 SGn+dGhlcmUh/k5pY2X+b2b+eW91/nRv/mRlY29kZf5tZf46KQ==
@@ -159,8 +161,18 @@ JavaScript implementation:
 
 ```js
 b64u_lookup = {'/': '_', '_': '/', '+': '-', '-': '+', '=': '.', '.': '='}
-b64u_enc = (str) => btoa(str).replace(/(\+|\/|=)/g, (m) => b64u_lookup[m])
-b64u_dec = (str) => atob(str.replace(/(-|_|\.)/g, (m) => b64u_lookup[m]))
+b64u_enc = (str) => {
+    const bytes = new TextEncoder().encode(str)
+    let binary = ''
+    for (const byte of bytes) binary += String.fromCharCode(byte)
+    return btoa(binary).replace(/(\+|\/|=)/g, (m) => b64u_lookup[m])
+}
+b64u_dec = (str) => {
+    const binary = atob(str.replace(/(-|_|\.)/g, (m) => b64u_lookup[m]))
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+    return new TextDecoder('utf-8', {fatal: true}).decode(bytes)
+}
 ```
 
 

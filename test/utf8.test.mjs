@@ -30,7 +30,6 @@ import { encodeOp, encodeOps, encodeTx, decode } from '../lib/index.js'
 
 // --- legacy compatibility: pure-ASCII payloads still decode ------------------
 {
-  const uri = 'steem://sign/op/WyJ2b3RlIl0'  // not valid JSON payload; use a real one below
   const op = ['vote', { voter: 'ety001', author: 'bob', permlink: 'hello-world', weight: 10000 }]
   const encoded = encodeOp(op, {})
   const { tx } = decode(encoded)
@@ -38,7 +37,7 @@ import { encodeOp, encodeOps, encodeTx, decode } from '../lib/index.js'
   console.log('PASS: ASCII op round-trip unchanged')
 }
 
-// --- legacy mojibake payload decode: old atob-encoded CJK now throws (fatal utf-8) ---
+// --- old-encoder compatibility: base64u of raw UTF-8 bytes decodes correctly ---
 // Old clients produced base64 of UTF-8 bytes; atob-decode gave mojibake but the
 // bytes were still the same. Our new decoder reads the same bytes as UTF-8, so
 // URLs produced by BOTH old and new encoders decode to correct text.
